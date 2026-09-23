@@ -1,0 +1,43 @@
+:root {
+  color: #1d2a2e;
+  background: #e8eee9;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; }
+
+button, input { font: inherit; }
+
+.app-shell { max-width: 980px; margin: 0 auto; padding: 4rem 1.5rem; }
+.page-header { border-bottom: 1px solid #aab9ae; padding-bottom: 2.5rem; }
+.page-header h1 { max-width: 650px; margin: .25rem 0 .75rem; font-size: clamp(2.7rem, 8vw, 5.8rem); line-height: .95; font-weight: 400; letter-spacing: 0; }
+.page-header p:not(.eyebrow) { max-width: 500px; margin: 0; color: #53625d; font-size: 1.1rem; }
+.eyebrow { margin: 0; color: #b15135; font: 700 .75rem/1.2 Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.workspace { display: grid; grid-template-columns: auto minmax(140px, 240px) 1fr; gap: 1rem; align-items: end; padding: 2rem 0; border-bottom: 1px solid #aab9ae; }
+.workspace label { font: 700 .75rem/1.2 Arial, sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+.workspace input, .upload-form input[type='file'] { border: 1px solid #93a49b; border-radius: 2px; background: #f7f8f3; padding: .7rem; }
+.upload-form { display: flex; justify-content: end; gap: .75rem; align-items: center; }
+.upload-form label { display: none; }
+button, .download-button { display: inline-block; border: 0; border-radius: 2px; background: #b15135; color: white; padding: .75rem 1rem; text-decoration: none; cursor: pointer; font: 700 .8rem/1.2 Arial, sans-serif; }
+button:disabled { opacity: .6; cursor: wait; }
+.documents-section { padding-top: 2.5rem; }
+.section-heading { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.25rem; }
+.section-heading h2 { margin: .4rem 0 0; font-size: 2rem; font-weight: 400; }
+.document-count { color: #b15135; font: 700 2rem/1 Arial, sans-serif; }
+.document-list { border-top: 1px solid #aab9ae; }
+.document-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.2rem 0; border-bottom: 1px solid #aab9ae; }
+.document-item h3 { margin: 0 0 .35rem; font-size: 1.25rem; font-weight: 400; overflow-wrap: anywhere; }
+.document-item p, .document-item small { margin: 0; color: #64736d; font: .82rem/1.5 Arial, sans-serif; }
+.empty-state, .error-message { color: #64736d; font-family: Arial, sans-serif; }
+.error-message { color: #9d3d2c; }
+
+@media (max-width: 700px) {
+  .app-shell { padding: 2.5rem 1rem; }
+  .workspace { grid-template-columns: 1fr; align-items: stretch; }
+  .upload-form { display: grid; grid-template-columns: 1fr; justify-content: stretch; }
+  .upload-form input[type='file'] { width: 100%; }
+  .document-item { align-items: start; flex-direction: column; }
+}
