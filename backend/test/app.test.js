@@ -34,15 +34,24 @@ test('realiza upload, lista e baixa um documento', async () => {
     assert.strictEqual(document.originalName, 'teste.txt');
     assert.strictEqual(document.owner, 'user-1');
     assert.strictEqual(document.size, 18);
-    assert.strictEqual(Object.hasOwn(document, 'storedName'), true);
+    assert.strictEqual(Object.hasOwn(document, 'storedName'), false);
 
-    const listResponse = await fetch(`http://127.0.0.1:${address.port}/documents?owner=user-1`);
+    const listResponse = await fetch(`http://127.0.0.1:${address.port}/documents`, {
+      headers: { 'X-User-Id': 'user-1' },
+    });
     assert.strictEqual(listResponse.status, 200);
     assert.deepStrictEqual(await listResponse.json(), [document]);
 
-    const downloadResponse = await fetch(`http://127.0.0.1:${address.port}/documents/${document.id}/download`);
+    const downloadResponse = await fetch(`http://127.0.0.1:${address.port}/documents/${document.id}/download`, {
+      headers: { 'X-User-Id': 'user-1' },
+    });
     assert.strictEqual(downloadResponse.status, 200);
     assert.strictEqual(await downloadResponse.text(), 'conteúdo de teste');
+
+    const unauthorizedDownloadResponse = await fetch(`http://127.0.0.1:${address.port}/documents/${document.id}/download`, {
+      headers: { 'X-User-Id': 'user-2' },
+    });
+    assert.strictEqual(unauthorizedDownloadResponse.status, 404);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await fs.rm(storageDirectory, { recursive: true, force: true });
@@ -59,6 +68,52 @@ test('rejeita upload sem arquivo', async () => {
 
     assert.strictEqual(response.status, 400);
     assert.deepStrictEqual(await response.json(), { error: 'O arquivo é obrigatório' });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('rejeita tipo de arquivo não permitido', async () => {
+  const storageDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'dms-test-'));
+  const testApp = appModule.createApp({ storageDirectory });
+  const server = testApp.listen(0);
+
+  try {
+    const address = server.address();
+    const formData = new FormData();
+    formData.append('file', new Blob(['conteúdo'], { type: 'application/x-executable' }), 'programa.exe');
+
+    const response = await fetch(`http://127.0.0.1:${address.port}/upload`, {
+      method: 'POST',
+      headers: { 'X-User-Id': 'user-1' },
+      body: formData,
+    });
+
+    assert.strictEqual(response.status, 400);
+    assert.deepStrictEqual(await response.json(), { error: 'Tipo de arquivo não permitido' });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await fs.rm(storageDirectory, { recursive: true, force: true });
+  }
+});
+
+test('rejeita proprietário inválido', async () => {
+  const testApp = appModule.createApp();
+  const server = testApp.listen(0);
+
+  try {
+    const address = server.address();
+    const formData = new FormData();
+    formData.append('file', new Blob(['conteúdo'], { type: 'text/plain' }), 'teste.txt');
+
+    const response = await fetch(`http://127.0.0.1:${address.port}/upload`, {
+      method: 'POST',
+      headers: { 'X-User-Id': 'usuário inválido' },
+      body: formData,
+    });
+
+    assert.strictEqual(response.status, 400);
+    assert.deepStrictEqual(await response.json(), { error: 'Proprietário inválido' });
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

@@ -7,7 +7,7 @@ function formatDate(date) {
   }).format(new Date(date));
 }
 
-export default function DocumentList({ documents, isLoading }) {
+export default function DocumentList({ documents, owner, isLoading }) {
   if (isLoading) {
     return <p>Carregando documentos...</p>;
   }
@@ -25,7 +25,7 @@ export default function DocumentList({ documents, isLoading }) {
             <p>{document.size} bytes · {formatDate(document.uploadedAt)}</p>
             <small>Proprietário: {document.owner}</small>
           </div>
-          <DownloadButton documentId={document.id} />
+          <DownloadButton documentId={document.id} owner={owner} />
         </article>
       ))}
     </div>

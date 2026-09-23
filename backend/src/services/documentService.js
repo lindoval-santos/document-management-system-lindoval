@@ -6,6 +6,22 @@ class DocumentService {
     this.fileRepository = fileRepository;
   }
 
+  normalizeOwner(owner) {
+    const normalizedOwner = owner || 'anonymous';
+    if (!/^[a-zA-Z0-9._-]{1,100}$/.test(normalizedOwner)) {
+      const error = new Error('Proprietário inválido');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    return normalizedOwner;
+  }
+
+  toPublicMetadata(document) {
+    const { storedName, ...publicMetadata } = document;
+    return publicMetadata;
+  }
+
   createDocument({ file, owner }) {
     if (!file) {
       const error = new Error('O arquivo é obrigatório');
@@ -13,25 +29,32 @@ class DocumentService {
       throw error;
     }
 
-    const document = {
-      id: crypto.randomUUID(),
-      originalName: file.originalname,
-      size: file.size,
-      uploadedAt: new Date().toISOString(),
-      owner: owner || 'anonymous',
-      storedName: file.filename,
-    };
+    let document;
+    try {
+      document = {
+        id: crypto.randomUUID(),
+        originalName: file.originalname,
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+        owner: this.normalizeOwner(owner),
+        storedName: file.filename,
+      };
+      this.metadataRepository.create(document);
+    } catch (error) {
+      this.fileRepository.delete(file.filename);
+      throw error;
+    }
 
-    return this.metadataRepository.create(document);
+    return this.toPublicMetadata(document);
   }
 
   listDocuments(owner) {
-    return this.metadataRepository.findAll(owner);
+    return this.metadataRepository.findAll(this.normalizeOwner(owner)).map((document) => this.toPublicMetadata(document));
   }
 
-  getDownload(documentId) {
+  getDownload(documentId, owner) {
     const document = this.metadataRepository.findById(documentId);
-    if (!document) {
+    if (!document || document.owner !== this.normalizeOwner(owner)) {
       const error = new Error('Documento não encontrado');
       error.statusCode = 404;
       throw error;
