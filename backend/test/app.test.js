@@ -6,8 +6,6 @@ const path = require('node:path');
 const appModule = require('../src/app');
 const app = appModule;
 
-// Teste de fumaça do seed: garante que o app Express foi exportado.
-// Novos testes serão adicionados durante os Steps 2, 6 e 7 com auxílio do Copilot.
 test('o app backend é exportado', () => {
   assert.ok(app, 'o app deve estar definido');
   assert.strictEqual(typeof app, 'function', 'o app Express deve ser uma função');
@@ -46,6 +44,21 @@ test('realiza upload, lista e baixa um documento', async () => {
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await fs.rm(storageDirectory, { recursive: true, force: true });
+  }
+});
+
+test('retorna 404 ao baixar documento inexistente', async () => {
+  const testApp = appModule.createApp();
+  const server = testApp.listen(0);
+
+  try {
+    const address = server.address();
+    const response = await fetch(`http://127.0.0.1:${address.port}/documents/documento-inexistente/download`);
+
+    assert.strictEqual(response.status, 404);
+    assert.deepStrictEqual(await response.json(), { error: 'Documento não encontrado' });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
   }
 });
 
