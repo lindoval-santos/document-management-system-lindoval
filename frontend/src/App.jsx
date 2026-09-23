@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import DocumentList from './components/DocumentList';
-import UploadForm from './components/UploadForm';
+import UploadComponent from './components/UploadComponent';
 import { listDocuments } from './services/documentService';
 import './app.css';
 
@@ -48,7 +48,7 @@ export default function App() {
       <section className="workspace" aria-label="Gerenciamento de documentos">
         <label htmlFor="owner">Proprietário</label>
         <input id="owner" value={owner} onChange={(event) => setOwner(event.target.value || 'anonymous')} />
-        <UploadForm owner={owner} onUploaded={handleUploaded} />
+        <UploadComponent owner={owner} onUploaded={handleUploaded} />
       </section>
 
       <section className="documents-section">

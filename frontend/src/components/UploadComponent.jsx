@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { uploadDocument } from '../services/documentService';
 
-export default function UploadForm({ owner, onUploaded }) {
+export default function UploadComponent({ owner, onUploaded }) {
   const [file, setFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
