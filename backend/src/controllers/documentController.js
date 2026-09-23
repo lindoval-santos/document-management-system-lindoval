@@ -3,7 +3,7 @@ class DocumentController {
     this.documentService = documentService;
     this.upload = this.upload.bind(this);
     this.list = this.list.bind(this);
-    this.download = this.download.bind(this);
+    this.download = this.download.bind(this); 
   }
 
   upload(req, res) {
