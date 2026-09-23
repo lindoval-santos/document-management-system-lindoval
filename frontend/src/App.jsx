@@ -12,24 +12,28 @@ export default function App() {
 
   useEffect(() => {
     let isCurrent = true;
-
-    setIsLoading(true);
-    listDocuments(owner)
-      .then((loadedDocuments) => {
-        if (isCurrent) {
-          setDocuments(loadedDocuments);
-          setError('');
-        }
-      })
-      .catch((loadError) => {
-        if (isCurrent) setError(loadError.message);
-      })
-      .finally(() => {
-        if (isCurrent) setIsLoading(false);
-      });
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      setIsLoading(true);
+      listDocuments(owner, { signal: abortController.signal })
+        .then((loadedDocuments) => {
+          if (isCurrent) {
+            setDocuments(loadedDocuments);
+            setError('');
+          }
+        })
+        .catch((loadError) => {
+          if (isCurrent && loadError.name !== 'AbortError') setError(loadError.message);
+        })
+        .finally(() => {
+          if (isCurrent) setIsLoading(false);
+        });
+    }, 250);
 
     return () => {
       isCurrent = false;
+      clearTimeout(timeoutId);
+      abortController.abort();
     };
   }, [owner]);
 
@@ -60,7 +64,7 @@ export default function App() {
           <span className="document-count">{documents.length}</span>
         </div>
         {error && <p className="error-message" role="alert">{error}</p>}
-        <DocumentList documents={documents} isLoading={isLoading} />
+        <DocumentList documents={documents} owner={owner} isLoading={isLoading} />
       </section>
     </main>
   );

@@ -6,9 +6,10 @@ const { LocalFileRepository } = require('./repositories/localFileRepository');
 
 function createApp({ metadataRepository, fileRepository, storageDirectory } = {}) {
   const app = express();
+  const configuredFileRepository = fileRepository || new LocalFileRepository({ storageDirectory });
   const documentService = new DocumentService({
     metadataRepository: metadataRepository || new DocumentMetadataRepository(),
-    fileRepository: fileRepository || new LocalFileRepository({ storageDirectory }),
+    fileRepository: configuredFileRepository,
   });
 
   app.use(express.json());
@@ -17,7 +18,10 @@ function createApp({ metadataRepository, fileRepository, storageDirectory } = {}
     res.json({ status: 'ok' });
   });
 
-  app.use(createDocumentRoutes({ documentService, storageDirectory }));
+  app.use(createDocumentRoutes({
+    documentService,
+    storageDirectory: storageDirectory || configuredFileRepository.storageDirectory,
+  }));
 
   app.use((error, req, res, next) => {
     if (res.headersSent) {
@@ -29,9 +33,12 @@ function createApp({ metadataRepository, fileRepository, storageDirectory } = {}
       : error instanceof SyntaxError && error.status === 400
         ? 400
         : error.statusCode || 500;
-    res.status(status).json({
-      error: status === 413 ? 'O arquivo excede o limite permitido' : error.message || 'Erro interno do servidor',
-    });
+    const message = status >= 500
+      ? 'Erro interno do servidor'
+      : status === 413
+        ? 'O arquivo excede o limite permitido'
+        : error.message || 'Erro na requisição';
+    res.status(status).json({ error: message });
   });
 
   return app;

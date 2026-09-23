@@ -8,6 +8,12 @@ class LocalFileRepository {
   }
 
   getFilePath(storedName) {
+    if (!storedName || path.basename(storedName) !== storedName) {
+      const error = new Error('Nome de arquivo inválido');
+      error.statusCode = 400;
+      throw error;
+    }
+
     const resolvedPath = path.resolve(this.storageDirectory, storedName);
     const storageRoot = `${path.resolve(this.storageDirectory)}${path.sep}`;
 
@@ -24,9 +30,29 @@ class LocalFileRepository {
     return fs.existsSync(this.getFilePath(storedName));
   }
 
+  delete(storedName) {
+    const filePath = this.getFilePath(storedName);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+
   getDownloadPath(storedName) {
     const filePath = this.getFilePath(storedName);
-    if (!fs.existsSync(filePath)) {
+    let fileStats;
+    try {
+      fileStats = fs.lstatSync(filePath);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        const notFoundError = new Error('Arquivo não encontrado');
+        notFoundError.statusCode = 404;
+        throw notFoundError;
+      }
+
+      throw error;
+    }
+
+    if (fileStats.isSymbolicLink() || !fileStats.isFile()) {
       const error = new Error('Arquivo não encontrado');
       error.statusCode = 404;
       throw error;

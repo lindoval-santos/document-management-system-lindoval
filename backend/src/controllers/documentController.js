@@ -6,21 +6,25 @@ class DocumentController {
     this.download = this.download.bind(this); 
   }
 
+  getOwner(req) {
+    return req.header('X-User-Id') || 'anonymous';
+  }
+
   upload(req, res) {
     const document = this.documentService.createDocument({
       file: req.file,
-      owner: req.header('X-User-Id') || req.body?.owner,
+      owner: this.getOwner(req),
     });
 
     res.status(201).json(document);
   }
 
   list(req, res) {
-    res.json(this.documentService.listDocuments(req.query.owner));
+    res.json(this.documentService.listDocuments(this.getOwner(req)));
   }
 
   download(req, res) {
-    const { document, filePath } = this.documentService.getDownload(req.params.id);
+    const { document, filePath } = this.documentService.getDownload(req.params.id, this.getOwner(req));
     res.download(filePath, document.originalName);
   }
 }
